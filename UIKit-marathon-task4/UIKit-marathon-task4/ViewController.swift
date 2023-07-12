@@ -63,6 +63,8 @@ class ViewController: UIViewController {
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
             if model.isSelected {
                 cell.accessoryType = .checkmark
+            } else {
+                cell.accessoryType = .none
             }
             cell.textLabel?.text = String(model.number)
             return cell
@@ -70,11 +72,11 @@ class ViewController: UIViewController {
         updateDataSource(items)
     }
     
-    private func updateDataSource(_ items: [ItemModel]) {
+    private func updateDataSource(_ items: [ItemModel], animated: Bool = true) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, ItemModel>()
         snapshot.appendSections([.first])
         snapshot.appendItems(items)
-        dataSource.apply(snapshot)
+        dataSource.apply(snapshot, animatingDifferences: animated)
     }
     
     @objc private func shuffleButtonTapped() {
@@ -87,12 +89,12 @@ extension ViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-        items.remove(at: indexPath.row)
         if item.isSelected {
-            items.insert(ItemModel(id: item.id, number: item.number, isSelected: !item.isSelected), at: 0)
+            items[indexPath.row].isSelected = false
         } else {
-            items.insert(ItemModel(id: item.id, number: item.number, isSelected: !item.isSelected), at: indexPath.row)
+            items.remove(at: indexPath.row)
+            items.insert(ItemModel(id: item.id, number: item.number, isSelected: true), at: 0)
         }
-        updateDataSource(items)
+        updateDataSource(items, animated: !item.isSelected)
     }
 }
